@@ -1,5 +1,20 @@
 #!/usr/bin/env python2.6
 # vim:et sts=4 sw=4
+#
+#
+#  Copyright 2009 Christopher K. Monson
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 
 from __future__ import print_function
 from __future__ import division
@@ -19,12 +34,29 @@ import time
 from math import e, pi, cos, sin, exp, sqrt
 
 
-class Error(Exception): pass
-class UnknownAction(Error): pass
-class InvalidStateName(Error): pass
-class IncompleteParticleDefinition(Error): pass
-class IncompleteDimensionSpec(Error): pass
-class IncompatibleDimensionSpec(Error): pass
+class Error(Exception):
+    pass
+
+
+class UnknownAction(Error):
+    pass
+
+
+class InvalidStateName(Error):
+    pass
+
+
+class IncompleteParticleDefinition(Error):
+    pass
+
+
+class IncompleteDimensionSpec(Error):
+    pass
+
+
+class IncompatibleDimensionSpec(Error):
+    pass
+
 
 class Function(object):
     _default_per_dim_constraints = (-100, 100)
@@ -68,6 +100,7 @@ class Rastrigin(Function):
         func_pos = position - self.offset
         return np.sum(func_pos**2 - 10*np.cos(2*pi*func_pos) + 10)
 
+
 class Ackley(Function):
     per_dim_constraints = (-32.768, 32.768)
 
@@ -76,6 +109,7 @@ class Ackley(Function):
         s1 = np.sum(func_pos**2)
         s2 = np.sum(np.cos(2*pi*func_pos))
         return 20 + e + -20 * exp(-0.2 * sqrt(s1/self.dim)) - exp(s2/self.dim)
+
 
 class DeJongF4(Function):
     per_dim_constraints = (-20, 20)
@@ -87,6 +121,7 @@ class DeJongF4(Function):
     def __call__(self, position):
         return np.sum(self.idx_vec * (position - self.offset)**4)
 
+
 class Easom(Function):
     per_dim_constraints = (-100, 100)
 
@@ -94,12 +129,14 @@ class Easom(Function):
         func_pos = position - self.offset
         return 1 + exp(-np.sum(func_pos**2)) * np.prod(np.cos(pi+func_pos))
 
+
 class Gauss(Function):
     per_dim_constraints = (-2, 2)
 
     def __call__(self, position):
         func_pos = position - self.offset
         return 1 - np.prod(np.exp(-func_pos**2))
+
 
 class Griewank(Function):
     per_dim_constraints = (-600, 600)
@@ -113,6 +150,7 @@ class Griewank(Function):
         s = np.sum(func_pos**2)
         p = np.prod(np.cos(func_pos / self.sqrt_idx_vec))
         return s/4000 - p + 1
+
 
 class Rosenbrock(Function):
     per_dim_constraints = (-100, 100)
@@ -132,6 +170,7 @@ class SchafferF6(Function):
         xsq = np.sum(func_pos**2)
         return .5 + (sin(sqrt(xsq))**2 - .5)/((1 + .001*xsq)**2)
 
+
 class SchafferF7(Function):
     per_dim_constraints = (-100, 100)
 
@@ -140,6 +179,7 @@ class SchafferF7(Function):
         xsq = np.sum(func_pos**2)
         return xsq**.25 * (sin(50*xsq**.1)**2 + 1)
 
+
 class Schwefel(Function):
     per_dim_constraints = (-500, 500)
 
@@ -147,6 +187,7 @@ class Schwefel(Function):
         func_pos = position - self.offset
         return (418.9829 * self.dim +
                 np.sum(func_pos * np.sin(np.sqrt(np.abs(func_pos)))))
+
 
 class Parabola(Function):
     per_dim_constraints = (-50, 50)
@@ -168,6 +209,7 @@ class Parabola(Function):
         '68.84'
         """
         return np.sum((position - self.offset)**2)
+
 
 Sphere = Parabola
 
@@ -223,7 +265,9 @@ class PVCube(object):
 
 
 class Particle(object):
-    class Scratch(object): pass
+    class Scratch(object):
+        pass
+
     def __init__(self, id, position, velocity,
                  value=None, best_position=None, best_value=None,
                  collisions=None, age_of_best=None):
@@ -290,7 +334,7 @@ class Particle(object):
                    "best_position",
                    "velocity",
                    "age_of_best",
-                   "collisions",]
+                   "collisions", ]
         if not show_vectors:
             to_show.remove("position")
             to_show.remove("best_position")
@@ -421,7 +465,8 @@ class Simulation(object):
         suitable defaults.
         """
         # Create appropriate variables from the keyword arguments.
-        class Vars: pass
+        class Vars:
+            pass
         self.var = Vars()
         for name, default, _ in self.variables:
             setattr(self.var, name, kargs.get(name, default))
@@ -484,7 +529,7 @@ class Simulation(object):
             if p.best_value is None or p.value < p.best_value:
                 p.update_best()
                 p.collisions = max(
-                        0, p.collisions-self.var.decrement_bounce_on_update)
+                    0, p.collisions-self.var.decrement_bounce_on_update)
             yield p
 
     @staticmethod
@@ -511,7 +556,7 @@ class Simulation(object):
             return lambda *unused_args: v1
         elif name in ('random', 'uniform'):
             return lambda *unused_args: self.random.uniform(
-                    low=min(v1,v2), high=max(v1,v2))
+                low=min(v1, v2), high=max(v1, v2))
         elif name == 'gamma':
             def g(iters, particle=None):
                 age = particle.age_of_best if particle else iters
@@ -522,6 +567,7 @@ class Simulation(object):
                 spec = self.var.max_evals
             assert spec, "Linear only makes sense with a max eval setting"
             spec = int(spec)
+
             def l(iters, particle=None):
                 return v1 + (v2-v1) * (min(iters, spec-1)/(spec-1))
             return l
@@ -568,6 +614,7 @@ class Simulation(object):
             return p
         elif name == "urandupdate":
             half_width = abs(v1-v2)/2
+
             def u(iters, particle):
                 age = particle.age_of_best
                 # The smoothed value, calculated by drawing it toward the last
@@ -757,7 +804,7 @@ class Simulation(object):
                 mask = np.abs(p.scratch.velocity) > vmax
                 p.scratch.capped_velocity = (~mask*p.scratch.velocity +
                                              mask*vmax*np.sign(
-                                                     p.scratch.velocity))
+                                                 p.scratch.velocity))
             p.scratch.position = p.position + p.scratch.capped_velocity
 
         if radius:
@@ -922,7 +969,6 @@ def setup():
     parser.add_option("", "--log_every", dest="log_every", default=1, type=int,
                       help="Log every n evaluations")
 
-
     for varname, default, desc in Simulation.variables:
         long_opt = "--{0}".format(varname)
         special_args = dict()
@@ -1027,7 +1073,7 @@ def main(options, args):
                 log("{0}:{1}:{2}".format(batch, action, pstr), to_stderr=False)
 
             if (best_so_far is None or
-                best_so_far.best_value > particle.best_value):
+                    best_so_far.best_value > particle.best_value):
                 best_so_far = particle
             if i > last_output + 500:
                 t = time.time()
